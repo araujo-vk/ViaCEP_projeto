@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de CEP e Endereço</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #3498db;
+        }
+
+        button.limpar {
+            background-color: #e74c3c;
+        }
+
+        button.limpar:hover {
+            background-color: #c0392b;
+        }
+
+        .resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+
+        .resultado.sucesso {
+            display: block;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .resultado.erro {
+            display: block;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+
+        .historico {
+            margin-top: 30px;
+        }
+
+        .historico-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .historico-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #ccc;
+            border-top-color: #3498db;
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Consulta de CEP e Endereço</h1>
+            <p class="description">Consulte endereços por CEP ou CEPs por endereço</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="cep">Pesquisa por CEP</div>
+            <div class="tab" data-tab="endereco">Pesquisa por Endereço</div>
+            <div class="tab" data-tab="historico">Histórico</div>
+        </div>
+
+        <div class="tab-content active" id="cep-content">
+            <div class="form-group">
+                <label for="cep">CEP (8 dígitos):</label>
+                <input type="text" id="cep" placeholder="Digite o CEP (apenas números)" maxlength="8">
+            </div>
+            <button id="buscar-cep">Buscar Endereço</button>
+            <button class="limpar" id="limpar-cep">Limpar</button>
+            
+            <div class="loading" id="loading-cep">
+                <span></span>
+                <p>Buscando endereço...</p>
+            </div>
+            
+            <div class="resultado" id="resultado-cep"></div>
+        </div>
+
+        <div class="tab-content" id="endereco-content">
+            <div class="form-group">
+                <label for="estado">Estado (UF):</label>
+                <select id="estado">
+                    <option value="">Selecione o estado</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cidade">Cidade:</label>
+                <input type="text" id="cidade" placeholder="Digite a cidade">
+            </div>
+            <div class="form-group">
+                <label for="logradouro">Logradouro:</label>
+                <input type="text" id="logradouro" placeholder="Digite o logradouro">
+            </div>
+            <button id="buscar-endereco">Buscar CEP</button>
+            <button class="limpar" id="limpar-endereco">Limpar</button>
+            
+            <div class="loading" id="loading-endereco">
+                <span></span>
+                <p>Buscando CEP...</p>
+            </div>
+            
+            <div class="resultado" id="resultado-endereco"></div>
+        </div>
+
+        <div class="tab-content" id="historico-content">
+            <div class="historico" id="historico-lista">
+                <p>Nenhuma consulta realizada ainda.</p>
+            </div>
+            <button class="limpar" id="limpar-historico">Limpar Histórico</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da interface
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const cepInput = document.getElementById('cep');
+            const estadoSelect = document.getElementById('estado');
+            const cidadeInput = document.getElementById('cidade');
+            const logradouroInput = document.getElementById('logradouro');
+            const buscarCepBtn = document.getElementById('buscar-cep');
+            const buscarEnderecoBtn = document.getElementById('buscar-endereco');
+            const limparCepBtn = document.getElementById('limpar-cep');
+            const limparEnderecoBtn = document.getElementById('limpar-endereco');
+            const limparHistoricoBtn = document.getElementById('limpar-historico');
+            const resultadoCep = document.getElementById('resultado-cep');
+            const resultadoEndereco = document.getElementById('resultado-endereco');
+            const loadingCep = document.getElementById('loading-cep');
+            const loadingEndereco = document.getElementById('loading-endereco');
+            const historicoLista = document.getElementById('historico-lista');
+
+            // Alternar entre abas
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Remover classe active de todas as tabs e conteúdos
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Adicionar classe active à tab clicada e ao conteúdo correspondente
+                    tab.classList.add('active');
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                    
+                    // Se for a aba de histórico, atualizar a lista
+                    if (tabId === 'historico') {
+                        carregarHistorico();
+                    }
+                });
+            });
+
+            // Formatar CEP (apenas números e limitar a 8 caracteres)
+            cepInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 8);
+            });
+
+            // Buscar endereço por CEP
+            buscarCepBtn.addEventListener('click', function() {
+                const cep = cepInput.value.trim();
+                
+                // Validação do CEP
+                if (cep.length !== 8) {
+                    mostrarResultado(resultadoCep, 'Por favor, digite um CEP válido com 8 dígitos.', 'erro');
+                    return;
+                }
+                
+                // Mostrar loading
+                loadingCep.style.display = 'block';
+                resultadoCep.style.display = 'none';
+                
+                // Fazer requisição à API ViaCEP
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingCep.style.display = 'none';
+                        
+                        if (data.erro) {
+                            mostrarResultado(resultadoCep, 'CEP não encontrado.', 'erro');
+                        } else {
+                            const endereco = `
+                                <strong>Logradouro:</strong> ${data.logradouro || 'Não informado'}<br>
+                                <strong>Bairro:</strong> ${data.bairro || 'Não informado'}<br>
+                                <strong>Cidade:</strong> ${data.localidade}<br>
+                                <strong>Estado:</strong> ${data.uf}
+                            `;
+                            mostrarResultado(resultadoCep, endereco, 'sucesso');
+                            
+                            // Salvar no histórico
+                            salvarNoHistorico({
+                                tipo: 'cep',
+                                consulta: cep,
+                                resultado: data
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        loadingCep.style.display = 'none';
+                        mostrarResultado(resultadoCep, 'Erro ao buscar o CEP. Tente novamente.', 'erro');
+                        console.error('Erro:', error);
+                    });
+            });
+
+            // Buscar CEP por endereço
+            buscarEnderecoBtn.addEventListener('click', function() {
+                const estado = estadoSelect.value;
+                const cidade = cidadeInput.value.trim();
+                const logradouro = logradouroInput.value.trim();
+                
+                // Validação dos campos
+                if (!estado || !cidade || !logradouro) {
+                    mostrarResultado(resultadoEndereco, 'Por favor, preencha todos os campos.', 'erro');
+                    return;
+                }
+                
+                // Mostrar loading
+                loadingEndereco.style.display = 'block';
+                resultadoEndereco.style.display = 'none';
+                
+                // Fazer requisição à API ViaCEP
+                fetch(`https://viacep.com.br/ws/${estado}/${cidade}/${logradouro}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingEndereco.style.display = 'none';
+                        
+                        if (data.erro || data.length === 0) {
+                            mostrarResultado(resultadoEndereco, 'Endereço não encontrado.', 'erro');
+                        } else {
+                            let resultadosHTML = '';
+                            
+                            if (Array.isArray(data)) {
+                                data.forEach(item => {
+                                    resultadosHTML += `
+                                        <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                                            <strong>CEP:</strong> ${item.cep}<br>
+                                            <strong>Logradouro:</strong> ${item.logradouro}<br>
+                                            <strong>Bairro:</strong> ${item.bairro}<br>
+                                            <strong>Cidade:</strong> ${item.localidade}<br>
+                                            <strong>Estado:</strong> ${item.uf}
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                resultadosHTML = `
+                                    <strong>CEP:</strong> ${data.cep}<br>
+                                    <strong>Logradouro:</strong> ${data.logradouro}<br>
+                                    <strong>Bairro:</strong> ${data.bairro}<br>
+                                    <strong>Cidade:</strong> ${data.localidade}<br>
+                                    <strong>Estado:</strong> ${data.uf}
+                                `;
+                            }
+                            
+                            mostrarResultado(resultadoEndereco, resultadosHTML, 'sucesso');
+                            
+                            // Salvar no histórico
+                            salvarNoHistorico({
+                                tipo: 'endereco',
+                                consulta: `${logradouro}, ${cidade}, ${estado}`,
+                                resultado: data
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        loadingEndereco.style.display = 'none';
+                        mostrarResultado(resultadoEndereco, 'Erro ao buscar o endereço. Tente novamente.', 'erro');
+                        console.error('Erro:', error);
+                    });
+            });
+
+            // Limpar campos e resultados
+            limparCepBtn.addEventListener('click', function() {
+                cepInput.value = '';
+                resultadoCep.style.display = 'none';
+                resultadoCep.className = 'resultado';
+            });
+
+            limparEnderecoBtn.addEventListener('click', function() {
+                estadoSelect.value = '';
+                cidadeInput.value = '';
+                logradouroInput.value = '';
+                resultadoEndereco.style.display = 'none';
+                resultadoEndereco.className = 'resultado';
+            });
+
+            limparHistoricoBtn.addEventListener('click', function() {
+                localStorage.removeItem('historicoCep');
+                carregarHistorico();
+            });
+
+            // Função para mostrar resultados
+            function mostrarResultado(elemento, mensagem, tipo) {
+                elemento.innerHTML = mensagem;
+                elemento.style.display = 'block';
+                elemento.className = `resultado ${tipo}`;
+            }
+
+            // Função para salvar no histórico
+            function salvarNoHistorico(consulta) {
+                let historico = JSON.parse(localStorage.getItem('historicoCep')) || [];
+                
+                // Adicionar nova consulta ao início do array
+                historico.unshift({
+                    data: new Date().toISOString(),
+                    ...consulta
+                });
+                
+                // Manter apenas as últimas 10 consultas
+                if (historico.length > 10) {
+                    historico = historico.slice(0, 10);
+                }
+                
+                // Salvar no localStorage
+                localStorage.setItem('historicoCep', JSON.stringify(historico));
+                
+                // Se estiver na aba de histórico, atualizar a lista
+                if (document.getElementById('historico-content').classList.contains('active')) {
+                    carregarHistorico();
+                }
+            }
+
+            // Função para carregar o histórico
+            function carregarHistorico() {
+                const historico = JSON.parse(localStorage.getItem('historicoCep')) || [];
+                
+                if (historico.length === 0) {
+                    historicoLista.innerHTML = '<p>Nenhuma consulta realizada ainda.</p>';
+                    return;
+                }
+                
+                let html = '';
+                historico.forEach(item => {
+                    const data = new Date(item.data).toLocaleString('pt-BR');
+                    
+                    html += `
+                        <div class="historico-item" data-tipo="${item.tipo}" data-consulta="${item.consulta}">
+                            <strong>${item.tipo === 'cep' ? 'CEP' : 'Endereço'}:</strong> ${item.consulta}<br>
+                            <small>${data}</small>
+                        </div>
+                    `;
+                });
+                
+                historicoLista.innerHTML = html;
+                
+                // Adicionar event listeners para os itens do histórico
+                document.querySelectorAll('.historico-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const tipo = this.getAttribute('data-tipo');
+                        const consulta = this.getAttribute('data-consulta');
+                        
+                        if (tipo === 'cep') {
+                            // Mudar para a aba de CEP e preencher o campo
+                            tabs.forEach(t => t.classList.remove('active'));
+                            tabContents.forEach(content => content.classList.remove('active'));
+                            
+                            document.querySelector('[data-tab="cep"]').classList.add('active');
+                            document.getElementById('cep-content').classList.add('active');
+                            
+                            cepInput.value = consulta;
+                            buscarCepBtn.click();
+                        } else {
+                            // Mudar para a aba de endereço
+                            tabs.forEach(t => t.classList.remove('active'));
+                            tabContents.forEach(content => content.classList.remove('active'));
+                            
+                            document.querySelector('[data-tab="endereco"]').classList.add('active');
+                            document.getElementById('endereco-content').classList.add('active');
+                            
+                            // Tentar preencher os campos (formato: "logradouro, cidade, estado")
+                            const partes = consulta.split(', ');
+                            if (partes.length >= 3) {
+                                logradouroInput.value = partes[0];
+                                cidadeInput.value = partes[1];
+                                estadoSelect.value = partes[2];
+                                buscarEnderecoBtn.click();
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
