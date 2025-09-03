@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de CEP e Endereço</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Consulta de CEP e Endereço</h1>
+            <p class="description">Consulte endereços por CEP ou CEPs por endereço</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="cep">Pesquisa por CEP</div>
+            <div class="tab" data-tab="endereco">Pesquisa por Endereço</div>
+            <div class="tab" data-tab="historico">Histórico</div>
+        </div>
+
+        <div class="tab-content active" id="cep-content">
+            <div class="form-group">
+                <label for="cep">CEP (8 dígitos):</label>
+                <input type="text" id="cep" placeholder="Digite o CEP (apenas números)" maxlength="8">
+            </div>
+            <button id="buscar-cep">Buscar Endereço</button>
+            <button class="limpar" id="limpar-cep">Limpar</button>
+            
+            <div class="loading" id="loading-cep">
+                <span></span>
+                <p>Buscando endereço...</p>
+            </div>
+            
+            <div class="resultado" id="resultado-cep"></div>
+        </div>
+
+        <div class="tab-content" id="endereco-content">
+            <div class="form-group">
+                <label for="estado">Estado (UF):</label>
+                <select id="estado">
+                    <option value="">Selecione o estado</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cidade">Cidade:</label>
+                <input type="text" id="cidade" placeholder="Digite a cidade">
+            </div>
+            <div class="form-group">
+                <label for="logradouro">Logradouro:</label>
+                <input type="text" id="logradouro" placeholder="Digite o logradouro">
+            </div>
+            <button id="buscar-endereco">Buscar CEP</button>
+            <button class="limpar" id="limpar-endereco">Limpar</button>
+            
+            <div class="loading" id="loading-endereco">
+                <span></span>
+                <p>Buscando CEP...</p>
+            </div>
+            
+            <div class="resultado" id="resultado-endereco"></div>
+        </div>
+
+        <div class="tab-content" id="historico-content">
+            <div class="historico" id="historico-lista">
+                <p>Nenhuma consulta realizada ainda.</p>
+            </div>
+            <button class="limpar" id="limpar-historico">Limpar Histórico</button>
+        </div>
+    </div>
+</body>
+</html>
